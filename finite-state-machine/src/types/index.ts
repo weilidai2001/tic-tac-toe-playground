@@ -11,6 +11,7 @@ export interface GameState {
     player1: Player;
     player2: Player;
   };
+  errorMessage?: string;
 }
 
 export type GameEvent = 
@@ -18,4 +19,6 @@ export type GameEvent =
   | { type: 'RESET' }
   | { type: 'SET_MODE'; mode: GameMode }
   | { type: 'SET_PLAYER_TYPE'; playerId: 'player1' | 'player2'; playerType: PlayerType }
-  | { type: 'AI_MOVE' };
+  | { type: 'AI_MOVE' }
+  | { type: 'SET_ERROR'; message: string }
+  | { type: 'CLEAR_ERROR' };

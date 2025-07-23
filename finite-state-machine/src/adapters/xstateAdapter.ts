@@ -22,7 +22,8 @@ export function useXStateAdapter(): GameStateAdapter {
     mode: context.mode,
     players: context.players,
     isSetup,
-    isAITurn
+    isAITurn,
+    errorMessage: context.errorMessage
   };
 
   const actions = {
@@ -44,7 +45,9 @@ export function useXStateAdapter(): GameStateAdapter {
       setTimeout(() => {
         window.location.reload();
       }, 100);
-    }
+    },
+    onClearError: () => send({ type: 'CLEAR_ERROR' }),
+    onSetError: (message: string) => send({ type: 'SET_ERROR', message })
   };
 
   return new XStateAdapter(gameState, actions, selectedSymbol, setSelectedSymbol);

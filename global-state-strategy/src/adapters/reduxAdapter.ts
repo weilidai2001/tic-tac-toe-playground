@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, makeAIMove } from '../store/gameSlice';
+import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, makeAIMove, setError, clearError } from '../store/gameSlice';
 import { GameStateAdapter, SquareValue, GameMode, PlayerType } from '@tic-tac-toe/views';
 
 class ReduxAdapter extends GameStateAdapter {
@@ -38,7 +38,9 @@ export function useReduxAdapter(): GameStateAdapter {
       }
     },
     onResetGame: () => dispatch(resetGame()),
-    onResetToSetup: () => dispatch(resetToSetup())
+    onResetToSetup: () => dispatch(resetToSetup()),
+    onClearError: () => dispatch(clearError()),
+    onSetError: (message: string) => dispatch(setError(message))
   };
 
   return new ReduxAdapter(gameState, actions, selectedSymbol, setSelectedSymbol);

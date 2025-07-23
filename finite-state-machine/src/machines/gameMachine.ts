@@ -14,7 +14,8 @@ const initialContext: GameState = {
   players: {
     player1: { id: 'player1', type: 'human', symbol: 'X' },
     player2: { id: 'player2', type: 'human', symbol: 'O' }
-  }
+  },
+  errorMessage: undefined
 };
 
 function makeAIMove(context: GameState): { index: number; symbol: SquareValue } {
@@ -39,6 +40,18 @@ export const gameMachine = createMachine<GameState, GameEvent>({
   id: 'ticTacToe',
   initial: 'setup',
   context: initialContext,
+  on: {
+    SET_ERROR: {
+      actions: assign({
+        errorMessage: (_, event) => event.message
+      })
+    },
+    CLEAR_ERROR: {
+      actions: assign({
+        errorMessage: () => undefined
+      })
+    }
+  },
   states: {
     setup: {
       on: {

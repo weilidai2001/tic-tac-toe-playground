@@ -10,41 +10,36 @@ interface GamePlayProps {
 export function GamePlay({ adapter }: GamePlayProps) {
   const { gameState, actions, selectedSymbol, setSelectedSymbol } = adapter;
 
-  const handleSquareClick = (index: number) => {
-    if (adapter.requiresSymbolSelection() && gameState.currentPlayer.type === 'human') {
-      if (!selectedSymbol) {
-        alert('Please select a symbol first!');
-        return;
-      }
-      actions.onSquareClick(index, selectedSymbol);
-      setSelectedSymbol(null);
-    } else {
-      actions.onSquareClick(index);
-    }
-  };
-
-
   const availableSymbols = adapter.getAvailableSymbols();
   const showSymbolSelector = adapter.shouldShowSymbolSelector();
   const isGameDisabled = adapter.isGameDisabled();
+  const hasError = adapter.hasError();
+  const errorMessage = adapter.getErrorMessage();
 
   return (
     <div className="game-area">
       <GameStatus adapter={adapter} />
+      
+      {hasError && (
+        <div className="error-message">
+          <span>{errorMessage}</span>
+          <button onClick={actions.onClearError}>✕</button>
+        </div>
+      )}
       
       {showSymbolSelector && (
         <SymbolSelector
           availableSymbols={availableSymbols}
           selectedSymbol={selectedSymbol}
           onSymbolSelect={setSelectedSymbol}
-          disabled={isGameDisabled}
+          disabled={isGameDisabled || hasError}
         />
       )}
 
       <Board
         board={gameState.board}
-        onSquareClick={handleSquareClick}
-        disabled={isGameDisabled}
+        onSquareClick={adapter.handleSquareClick}
+        disabled={isGameDisabled || hasError}
       />
 
       <div className="game-controls">

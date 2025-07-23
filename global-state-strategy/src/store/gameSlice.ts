@@ -16,7 +16,8 @@ const initialState: GameState = {
     player1: { id: 'player1', type: 'human', symbol: 'X' },
     player2: { id: 'player2', type: 'human', symbol: 'O' }
   },
-  isSetup: true
+  isSetup: true,
+  errorMessage: undefined
 };
 
 const gameSlice = createSlice({
@@ -141,6 +142,14 @@ const gameSlice = createSlice({
       } catch (error) {
         console.error('AI move failed:', error);
       }
+    },
+
+    setError: (state, action: PayloadAction<string>) => {
+      state.errorMessage = action.payload;
+    },
+
+    clearError: (state) => {
+      state.errorMessage = undefined;
     }
   }
 });
@@ -152,7 +161,9 @@ export const {
   makeMove, 
   resetGame, 
   resetToSetup,
-  makeAIMove
+  makeAIMove,
+  setError,
+  clearError
 } = gameSlice.actions;
 
 export default gameSlice.reducer;

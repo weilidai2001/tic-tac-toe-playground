@@ -17,6 +17,7 @@ export interface GameState {
   };
   isSetup: boolean;
   isAITurn?: boolean;
+  errorMessage?: string;
 }
 
 export interface GameActions {
@@ -26,6 +27,8 @@ export interface GameActions {
   onSquareClick: (index: number, symbol?: SquareValue) => void;
   onResetGame: () => void;
   onResetToSetup: () => void;
+  onClearError: () => void;
+  onSetError: (message: string) => void;
 }
 
 export abstract class GameStateAdapter {
@@ -84,5 +87,26 @@ export abstract class GameStateAdapter {
            !this.gameState.winner &&
            !this.gameState.isAITurn &&
            availableSymbols.length > 1;
+  }
+
+  handleSquareClick = (index: number) => {
+    if (this.requiresSymbolSelection() && this.gameState.currentPlayer.type === 'human') {
+      if (!this.selectedSymbol) {
+        this.actions.onSetError('Please select a symbol first!');
+        return;
+      }
+      this.actions.onSquareClick(index, this.selectedSymbol);
+      this.setSelectedSymbol(null);
+    } else {
+      this.actions.onSquareClick(index);
+    }
+  };
+
+  hasError(): boolean {
+    return !!this.gameState.errorMessage;
+  }
+
+  getErrorMessage(): string | undefined {
+    return this.gameState.errorMessage;
   }
 }
