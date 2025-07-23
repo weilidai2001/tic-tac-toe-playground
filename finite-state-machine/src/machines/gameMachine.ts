@@ -1,173 +1,100 @@
-import { createMachine, assign } from 'xstate';
-import { GameState, GameEvent, SquareValue } from '../types';
-import { createGameStrategy, isBoardFull, getAIMove } from '@tic-tac-toe/views';
+import { calculateWinner, isBoardFull, getAIMove } from '@tic-tac-toe/views';
 
-const initialContext: GameState = {
-  board: Array(9).fill(null),
-  currentPlayer: {
-    id: 'player1',
-    type: 'human',
-    symbol: 'X'
-  },
-  winner: null,
-  mode: 'standard',
-  players: {
-    player1: { id: 'player1', type: 'human', symbol: 'X' },
-    player2: { id: 'player2', type: 'human', symbol: 'O' }
-  },
-  errorMessage: undefined
-};
+type Cell = 'X' | 'O' | null;
+type Board = [Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell, Cell];
+type TTTState = 'X_TURN' | 'O_TURN' | 'X_WIN' | 'O_WIN' | 'DRAW';
+type TTTEvent = { type: 'MOVE'; index: number; symbol?: 'X' | 'O' } | { type: 'RESET' };
+type GameMode = 'standard' | 'wild';
 
-function makeAIMove(context: GameState): { index: number; symbol: SquareValue } {
-  const currentPlayer = context.currentPlayer;
-  const aiSymbol = currentPlayer.symbol;
-  
-  const move = getAIMove(context.board, context.mode, aiSymbol);
-  
-  // For wild mode, ensure we return a symbol
-  if (context.mode === 'wild' && !move.symbol) {
-    const symbols: SquareValue[] = ['X', 'O'];
-    move.symbol = symbols[Math.floor(Math.random() * symbols.length)];
-  }
-  
-  return {
-    index: move.index,
-    symbol: move.symbol || aiSymbol || 'O'
-  };
+interface Options {
+  computerPlaysX?: boolean;
+  computerPlaysO?: boolean;
+  mode?: GameMode;
 }
 
-export const gameMachine = createMachine<GameState, GameEvent>({
-  id: 'ticTacToe',
-  initial: 'setup',
-  context: initialContext,
-  on: {
-    SET_ERROR: {
-      actions: assign({
-        errorMessage: (_, event) => event.message
-      })
-    },
-    CLEAR_ERROR: {
-      actions: assign({
-        errorMessage: () => undefined
-      })
+export class TicTacToeFSM {
+  private state: TTTState = 'X_TURN';
+  private board: Board = Array(9).fill(null) as Board;
+  private mode: GameMode;
+
+  constructor(private readonly opts: Options = {}) {
+    this.mode = opts.mode || 'standard';
+    // let the computer open if it's X
+    this.maybeAutoMove();
+  }
+
+  // ---------- public API ----------
+  getState() { return this.state; }
+  getBoard() { return this.board; }
+  getMode() { return this.mode; }
+  dispatch(ev: TTTEvent) { this.handle(ev); }
+
+  // ---------- internals ----------
+  private handle(ev: TTTEvent) {
+    if (ev.type === 'RESET') return this.reset();
+    if (ev.type === 'MOVE') this.playerMove(ev.index, ev.symbol);
+  }
+
+  private playerMove(i: number, symbol?: 'X' | 'O') {
+    if (this.stateEnds() || this.board[i] !== null) return;
+
+    let player: 'X' | 'O';
+    
+    if (this.mode === 'wild' && symbol) {
+      // In wild mode, use the provided symbol
+      player = symbol;
+    } else {
+      // In standard mode, use current turn's symbol
+      player = this.state === 'X_TURN' ? 'X' : 'O';
     }
-  },
-  states: {
-    setup: {
-      on: {
-        SET_MODE: {
-          actions: assign({
-            mode: (_, event) => event.mode,
-            // Reset symbols for wild mode
-            players: (context, event) => event.mode === 'wild' ? {
-              player1: { ...context.players.player1, symbol: undefined },
-              player2: { ...context.players.player2, symbol: undefined }
-            } : {
-              player1: { ...context.players.player1, symbol: 'X' },
-              player2: { ...context.players.player2, symbol: 'O' }
-            },
-            currentPlayer: (context, event) => ({
-              ...context.currentPlayer,
-              symbol: event.mode === 'wild' ? undefined : 'X'
-            })
-          })
-        },
-        SET_PLAYER_TYPE: {
-          actions: assign({
-            players: (context, event) => ({
-              ...context.players,
-              [event.playerId]: {
-                ...context.players[event.playerId],
-                type: event.playerType
-              }
-            })
-          })
-        },
-        PLAY: {
-          target: 'playing',
-          actions: assign({
-            board: Array(9).fill(null),
-            currentPlayer: (context) => ({
-              ...context.players.player1,
-            }),
-            winner: null
-          })
-        }
-      }
-    },
-    playing: {
-      always: [
-        {
-          target: 'gameOver',
-          cond: (context) => {
-            const strategy = createGameStrategy(context.mode);
-            const winner = strategy.checkWinner(context.board);
-            return winner !== null || isBoardFull(context.board);
-          },
-          actions: assign({
-            winner: (context) => {
-              const strategy = createGameStrategy(context.mode);
-              const winner = strategy.checkWinner(context.board);
-              return winner || (isBoardFull(context.board) ? 'draw' : null);
-            }
-          })
-        },
-        {
-          target: 'aiTurn',
-          cond: (context) => context.currentPlayer.type === 'computer'
-        }
-      ],
-      on: {
-        PLAY: {
-          cond: (context, event) => {
-            const strategy = createGameStrategy(context.mode);
-            return strategy.isMoveValid(context.board, event.index) && 
-                   context.currentPlayer.type === 'human';
-          },
-          actions: assign({
-            board: (context, event) => {
-              const newBoard = [...context.board];
-              const symbol = event.symbol || 
-                (context.mode === 'standard' ? context.currentPlayer.symbol! : 'X');
-              newBoard[event.index] = symbol;
-              return newBoard;
-            },
-            currentPlayer: (context) => 
-              context.currentPlayer.id === 'player1' ? 
-              context.players.player2 : context.players.player1
-          })
-        }
-      }
-    },
-    aiTurn: {
-      after: {
-        500: {
-          target: 'playing',
-          actions: assign({
-            board: (context) => {
-              const { index, symbol } = makeAIMove(context);
-              const newBoard = [...context.board];
-              newBoard[index] = symbol;
-              return newBoard;
-            },
-            currentPlayer: (context) => 
-              context.currentPlayer.id === 'player1' ? 
-              context.players.player2 : context.players.player1
-          })
-        }
-      }
-    },
-    gameOver: {
-      on: {
-        RESET: {
-          target: 'playing',
-          actions: assign({
-            board: Array(9).fill(null),
-            currentPlayer: (context) => context.players.player1,
-            winner: null
-          })
-        }
+
+    this.board[i] = player;
+    this.updateStateAfterMove(player);
+    this.maybeAutoMove();
+  }
+
+  private maybeAutoMove() {
+    const { computerPlaysX, computerPlaysO } = this.opts;
+    if (
+      (this.state === 'X_TURN' && computerPlaysX) ||
+      (this.state === 'O_TURN' && computerPlaysO)
+    ) {
+      const move = this.pickAIMove();
+      if (move.index !== -1) {
+        this.playerMove(move.index, move.symbol);
       }
     }
   }
-});
+
+  private pickAIMove(): { index: number; symbol?: 'X' | 'O' } {
+    const currentSymbol = this.state === 'X_TURN' ? 'X' : 'O';
+    const move = getAIMove(this.board, this.mode, currentSymbol);
+    return {
+      index: move.index,
+      symbol: move.symbol as 'X' | 'O' | undefined
+    };
+  }
+
+  private updateStateAfterMove(_p: 'X' | 'O') {
+    const winner = calculateWinner(this.board);
+    if (winner) {
+      this.state = winner === 'X' ? 'X_WIN' : 'O_WIN';
+    } else if (isBoardFull(this.board)) {
+      this.state = 'DRAW';
+    } else {
+      // In standard mode, alternate turns
+      // In wild mode, turns still alternate (player turns, not symbol ownership)
+      this.state = this.state === 'X_TURN' ? 'O_TURN' : 'X_TURN';
+    }
+  }
+
+  private reset() {
+    this.state = 'X_TURN';
+    this.board.fill(null);
+    this.maybeAutoMove();
+  }
+
+  private stateEnds() {
+    return this.state === 'X_WIN' || this.state === 'O_WIN' || this.state === 'DRAW';
+  }
+}

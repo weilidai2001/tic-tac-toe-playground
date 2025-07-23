@@ -1,54 +1,104 @@
-import { useState } from 'react';
-import { useMachine } from '@xstate/react';
-import { gameMachine } from '../machines/gameMachine';
+import { useState, useEffect, useCallback } from 'react';
+import { TicTacToeFSM } from '../machines/gameMachine';
 import { GameStateAdapter, SquareValue, GameMode, PlayerType } from '@tic-tac-toe/views';
 
-class XStateAdapter extends GameStateAdapter {
+class FSMAdapter extends GameStateAdapter {
   // No additional methods needed - all shared logic is in the base class
 }
 
 export function useXStateAdapter(): GameStateAdapter {
-  const [state, send] = useMachine(gameMachine);
+  const [fsm, setFsm] = useState(() => new TicTacToeFSM());
   const [selectedSymbol, setSelectedSymbol] = useState<SquareValue | null>(null);
+  const [mode, setMode] = useState<GameMode>('standard');
+  const [players, setPlayers] = useState({
+    player1: { id: 'player1' as const, type: 'human' as PlayerType, symbol: 'X' as SquareValue },
+    player2: { id: 'player2' as const, type: 'human' as PlayerType, symbol: 'O' as SquareValue }
+  });
+  const [isSetup, setIsSetup] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const [, forceUpdate] = useState({});
 
-  const context = state.context;
-  const isSetup = state.matches('setup');
-  const isAITurn = state.matches('aiTurn');
+  const triggerRerender = useCallback(() => {
+    forceUpdate({});
+  }, []);
+
+  const state = fsm.getState();
+  const board = fsm.getBoard();
+  
+  const currentPlayer = state === 'X_TURN' || state === 'X_WIN' ? players.player1 : players.player2;
+  const winner: SquareValue | 'draw' | null = state === 'X_WIN' ? 'X' : state === 'O_WIN' ? 'O' : state === 'DRAW' ? 'draw' : null;
+  const isAITurn = currentPlayer.type === 'computer' && (state === 'X_TURN' || state === 'O_TURN');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAITurn) {
+        triggerRerender();
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isAITurn, triggerRerender]);
 
   const gameState = {
-    board: context.board,
-    currentPlayer: context.currentPlayer,
-    winner: context.winner,
-    mode: context.mode,
-    players: context.players,
+    board,
+    currentPlayer,
+    winner,
+    mode,
+    players,
     isSetup,
     isAITurn,
-    errorMessage: context.errorMessage
+    errorMessage
   };
 
   const actions = {
-    onModeChange: (mode: GameMode) => send({ type: 'SET_MODE', mode }),
-    onPlayerTypeChange: (playerId: 'player1' | 'player2', playerType: PlayerType) => 
-      send({ type: 'SET_PLAYER_TYPE', playerId, playerType }),
-    onStartGame: () => send({ type: 'PLAY', index: 0 }),
-    onSquareClick: (index: number, symbol?: SquareValue) => {
-      if (symbol) {
-        send({ type: 'PLAY', index, symbol });
+    onModeChange: (newMode: GameMode) => {
+      setMode(newMode);
+      if (newMode === 'wild') {
+        setPlayers({
+          player1: { ...players.player1, symbol: null },
+          player2: { ...players.player2, symbol: null }
+        });
       } else {
-        send({ type: 'PLAY', index });
+        setPlayers({
+          player1: { ...players.player1, symbol: 'X' },
+          player2: { ...players.player2, symbol: 'O' }
+        });
       }
     },
-    onResetGame: () => send({ type: 'RESET' }),
-    onResetToSetup: () => {
-      send({ type: 'RESET' });
-      // This is a bit of a hack for the setup transition
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+    onPlayerTypeChange: (playerId: 'player1' | 'player2', playerType: PlayerType) => {
+      setPlayers(prev => ({
+        ...prev,
+        [playerId]: { ...prev[playerId], type: playerType }
+      }));
     },
-    onClearError: () => send({ type: 'CLEAR_ERROR' }),
-    onSetError: (message: string) => send({ type: 'SET_ERROR', message })
+    onStartGame: () => {
+      const computerPlaysX = players.player1.type === 'computer';
+      const computerPlaysO = players.player2.type === 'computer';
+      const newFsm = new TicTacToeFSM({ computerPlaysX, computerPlaysO, mode });
+      setFsm(newFsm);
+      setIsSetup(false);
+      triggerRerender();
+    },
+    onSquareClick: (index: number, symbol?: SquareValue) => {
+      if (mode === 'wild' && symbol) {
+        fsm.dispatch({ type: 'MOVE', index, symbol });
+      } else {
+        fsm.dispatch({ type: 'MOVE', index });
+      }
+      triggerRerender();
+    },
+    onResetGame: () => {
+      fsm.dispatch({ type: 'RESET' });
+      triggerRerender();
+    },
+    onResetToSetup: () => {
+      setIsSetup(true);
+      const newFsm = new TicTacToeFSM();
+      setFsm(newFsm);
+      triggerRerender();
+    },
+    onClearError: () => setErrorMessage(undefined),
+    onSetError: (message: string) => setErrorMessage(message)
   };
 
-  return new XStateAdapter(gameState, actions, selectedSymbol, setSelectedSymbol);
+  return new FSMAdapter(gameState, actions, selectedSymbol, setSelectedSymbol);
 }
