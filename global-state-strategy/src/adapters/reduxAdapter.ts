@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, makeAIMove, setError, clearError } from '../store/gameSlice';
+import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, setError, clearError } from '../store/gameSlice';
 import { GameStateAdapter, SquareValue, GameMode, PlayerType } from '@tic-tac-toe/views';
 
 class ReduxAdapter extends GameStateAdapter {
@@ -11,19 +11,6 @@ export function useReduxAdapter(): GameStateAdapter {
   const dispatch = useAppDispatch();
   const gameState = useAppSelector(state => state.game);
   const [selectedSymbol, setSelectedSymbol] = useState<SquareValue | null>(null);
-
-  // Handle AI moves
-  useEffect(() => {
-    if (gameState.currentPlayer.type === 'computer' && 
-        !gameState.winner && 
-        !gameState.isSetup) {
-      const timer = setTimeout(() => {
-        dispatch(makeAIMove());
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [gameState.currentPlayer, gameState.winner, gameState.isSetup, dispatch]);
 
   const actions = {
     onModeChange: (mode: GameMode) => dispatch(setMode(mode)),

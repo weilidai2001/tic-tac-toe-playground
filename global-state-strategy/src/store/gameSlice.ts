@@ -2,6 +2,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { GameState, GameMode, PlayerType, SquareValue } from '../types';
 import { isBoardFull, createGameStrategy } from '@tic-tac-toe/views';
 import { getAIMove } from '../utils/aiPlayer';
+import type { RootState } from './index';
+
+// Thunk type
+export type AppThunk<ReturnType = void> = (
+  dispatch: (action: any) => void,
+  getState: () => RootState
+) => ReturnType;
 
 const initialState: GameState = {
   board: Array(9).fill(null),
@@ -41,14 +48,14 @@ const gameSlice = createSlice({
       state.players[action.payload.playerId].type = action.payload.playerType;
     },
     
-    startGame: (state) => {
+    _startGame: (state) => {
       state.isSetup = false;
       state.board = Array(9).fill(null);
       state.winner = null;
       state.currentPlayer = state.players.player1;
     },
     
-    makeMove: (state, action: PayloadAction<{ index: number; symbol?: SquareValue }>) => {
+    _makeMove: (state, action: PayloadAction<{ index: number; symbol?: SquareValue }>) => {
       const { index, symbol } = action.payload;
       const strategy = createGameStrategy(state.mode);
       
@@ -98,51 +105,6 @@ const gameSlice = createSlice({
     resetToSetup: (state) => {
       Object.assign(state, initialState);
     },
-    
-    makeAIMove: (state) => {
-      if (state.currentPlayer.type !== 'computer') return;
-      
-      try {
-        const aiMove = getAIMove(state.board, state.mode);
-        const strategy = createGameStrategy(state.mode);
-        
-        // Validate move
-        if (!strategy.isMoveValid(state.board, aiMove.index)) {
-          return;
-        }
-        
-        // Determine symbol to place
-        let symbolToPlace: SquareValue;
-        if (state.mode === 'standard') {
-          symbolToPlace = state.currentPlayer.symbol!;
-        } else {
-          symbolToPlace = aiMove.symbol!;
-        }
-        
-        // Make the move
-        state.board[aiMove.index] = symbolToPlace;
-        
-        // Check for winner
-        const winner = strategy.checkWinner(state.board);
-        if (winner) {
-          state.winner = winner;
-          return;
-        }
-        
-        // Check for draw
-        if (isBoardFull(state.board)) {
-          state.winner = 'draw';
-          return;
-        }
-        
-        // Switch to next player
-        state.currentPlayer = state.currentPlayer.id === 'player1' 
-          ? state.players.player2 
-          : state.players.player1;
-      } catch (error) {
-        console.error('AI move failed:', error);
-      }
-    },
 
     setError: (state, action: PayloadAction<string>) => {
       state.errorMessage = action.payload;
@@ -157,13 +119,37 @@ const gameSlice = createSlice({
 export const { 
   setMode, 
   setPlayerType, 
-  startGame, 
-  makeMove, 
+  _startGame, 
+  _makeMove, 
   resetGame, 
   resetToSetup,
-  makeAIMove,
   setError,
   clearError
 } = gameSlice.actions;
 
 export default gameSlice.reducer;
+
+// Helper function to handle AI moves
+const handleAIMove = (dispatch: any, getState: () => RootState) => {
+  const state = getState().game;
+  if (state.currentPlayer.type === 'computer' && !state.winner && !state.isSetup) {
+    try {
+      const aiMove = getAIMove(state.board, state.mode);
+      dispatch(_makeMove({ index: aiMove.index, symbol: aiMove.symbol }));
+    } catch (error) {
+      console.error('AI move failed:', error);
+    }
+  }
+};
+
+// Thunk to handle starting game with potential AI first move
+export const startGame = (): AppThunk => (dispatch, getState) => {
+  dispatch(_startGame());
+  handleAIMove(dispatch, getState);
+};
+
+// Thunk to handle move with potential AI response
+export const makeMove = (payload: { index: number; symbol?: SquareValue }): AppThunk => (dispatch, getState) => {
+  dispatch(_makeMove(payload));
+  handleAIMove(dispatch, getState);
+};
