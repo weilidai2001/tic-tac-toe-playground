@@ -12,4 +12,5 @@ export interface GameState {
     player2: Player;
   };
   isSetup: boolean;
+  isAITurn?: boolean;
 }
