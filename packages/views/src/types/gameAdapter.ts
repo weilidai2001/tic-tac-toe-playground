@@ -1,4 +1,6 @@
 import { GameMode, PlayerType, SquareValue, ModeConfig } from './index';
+import { getModeConfig } from '../config/modeConfigs';
+import { createGameStrategy } from '../strategies';
 
 export interface GameState {
   board: SquareValue[];
@@ -26,15 +28,51 @@ export interface GameActions {
   onResetToSetup: () => void;
 }
 
-export interface GameStateAdapter {
+export abstract class GameStateAdapter {
   gameState: GameState;
   actions: GameActions;
   selectedSymbol: SquareValue | null;
   setSelectedSymbol: (symbol: SquareValue | null) => void;
   
-  // Capability methods
-  requiresSymbolSelection(): boolean;
-  getModeConfig(): ModeConfig;
-  getAvailableSymbols(): SquareValue[];
-  getCurrentPlayerLabel(): string;
+  constructor(
+    gameState: GameState, 
+    actions: GameActions, 
+    selectedSymbol: SquareValue | null, 
+    setSelectedSymbol: (symbol: SquareValue | null) => void
+  ) {
+    this.gameState = gameState;
+    this.actions = actions;
+    this.selectedSymbol = selectedSymbol;
+    this.setSelectedSymbol = setSelectedSymbol;
+  }
+
+  // Shared implementations
+  isGameDisabled(): boolean {
+    return !!this.gameState.winner || 
+           this.gameState.isAITurn || 
+           this.gameState.currentPlayer.type === 'computer';
+  }
+
+  requiresSymbolSelection(): boolean {
+    return this.gameState.mode === 'wild' && 
+           this.gameState.currentPlayer.type === 'human' && 
+           !this.gameState.isSetup && 
+           !this.gameState.winner &&
+           !this.gameState.isAITurn;
+  }
+  
+  getModeConfig(): ModeConfig {
+    return getModeConfig(this.gameState.mode);
+  }
+  
+  getAvailableSymbols(): SquareValue[] {
+    if (this.gameState.mode === 'standard') return [];
+    const strategy = createGameStrategy(this.gameState.mode);
+    return strategy.getAvailableSymbols(this.gameState.currentPlayer, this.gameState.mode);
+  }
+  
+  getCurrentPlayerLabel(): string {
+    const config = getModeConfig(this.gameState.mode);
+    return config.getPlayerLabel(this.gameState.currentPlayer.id);
+  }
 }

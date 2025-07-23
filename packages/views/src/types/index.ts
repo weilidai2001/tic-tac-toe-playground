@@ -22,3 +22,6 @@ export interface GameStrategy {
   checkWinner(board: SquareValue[]): SquareValue | null;
   getAvailableSymbols(player: Player, mode: GameMode): SquareValue[];
 }
+
+// Re-export from gameAdapter.ts
+export type { GameState, GameActions } from './gameAdapter';

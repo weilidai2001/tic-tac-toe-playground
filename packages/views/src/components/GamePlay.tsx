@@ -32,9 +32,7 @@ export function GamePlay({ adapter }: GamePlayProps) {
     !gameState.isAITurn &&
     availableSymbols.length > 1;
 
-  const isGameDisabled = !!gameState.winner || 
-    gameState.isAITurn || 
-    gameState.currentPlayer.type === 'computer';
+  const isGameDisabled = adapter.isGameDisabled();
 
   return (
     <div className="game-area">

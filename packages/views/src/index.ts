@@ -27,4 +27,5 @@ export type {
   ModeConfig
 } from './types';
 
-export type { GameStateAdapter } from './types/gameAdapter';
+export { GameStateAdapter } from './types/gameAdapter';
+export type { GameState, GameActions } from './types/gameAdapter';
