@@ -96,7 +96,7 @@ const gameSlice = createSlice({
         : state.players.player1;
     },
     
-    resetGame: (state) => {
+    _resetGame: (state) => {
       state.board = Array(9).fill(null);
       state.winner = null;
       state.currentPlayer = state.players.player1;
@@ -121,7 +121,7 @@ export const {
   setPlayerType, 
   _startGame, 
   _makeMove, 
-  resetGame, 
+  _resetGame, 
   resetToSetup,
   setError,
   clearError
@@ -136,6 +136,14 @@ const handleAIMove = (dispatch: any, getState: () => RootState) => {
     try {
       const aiMove = getAIMove(state.board, state.mode);
       dispatch(_makeMove({ index: aiMove.index, symbol: aiMove.symbol }));
+      
+      // Continue AI chain if next player is also AI
+      setTimeout(() => {
+        const newState = getState().game;
+        if (newState.currentPlayer.type === 'computer' && !newState.winner && !newState.isSetup) {
+          handleAIMove(dispatch, getState);
+        }
+      }, 500); // Small delay for visual feedback
     } catch (error) {
       console.error('AI move failed:', error);
     }
@@ -151,5 +159,11 @@ export const startGame = (): AppThunk => (dispatch, getState) => {
 // Thunk to handle move with potential AI response
 export const makeMove = (payload: { index: number; symbol?: SquareValue }): AppThunk => (dispatch, getState) => {
   dispatch(_makeMove(payload));
+  handleAIMove(dispatch, getState);
+};
+
+// Thunk to handle reset game with potential AI first move
+export const resetGame = (): AppThunk => (dispatch, getState) => {
+  dispatch(_resetGame());
   handleAIMove(dispatch, getState);
 };
