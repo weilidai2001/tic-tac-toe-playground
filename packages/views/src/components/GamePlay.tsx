@@ -25,13 +25,7 @@ export function GamePlay({ adapter }: GamePlayProps) {
 
 
   const availableSymbols = adapter.getAvailableSymbols();
-  const showSymbolSelector = adapter.requiresSymbolSelection() && 
-    !gameState.isSetup && 
-    gameState.currentPlayer.type === 'human' && 
-    !gameState.winner &&
-    !gameState.isAITurn &&
-    availableSymbols.length > 1;
-
+  const showSymbolSelector = adapter.shouldShowSymbolSelector();
   const isGameDisabled = adapter.isGameDisabled();
 
   return (

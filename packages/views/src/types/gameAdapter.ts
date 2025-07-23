@@ -75,4 +75,14 @@ export abstract class GameStateAdapter {
     const config = getModeConfig(this.gameState.mode);
     return config.getPlayerLabel(this.gameState.currentPlayer.id);
   }
+
+  shouldShowSymbolSelector(): boolean {
+    const availableSymbols = this.getAvailableSymbols();
+    return this.requiresSymbolSelection() && 
+           !this.gameState.isSetup && 
+           this.gameState.currentPlayer.type === 'human' && 
+           !this.gameState.winner &&
+           !this.gameState.isAITurn &&
+           availableSymbols.length > 1;
+  }
 }
