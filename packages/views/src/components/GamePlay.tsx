@@ -1,5 +1,6 @@
 import { Board } from './Board';
 import { SymbolSelector } from './SymbolSelector';
+import { GameStatus } from './GameStatus';
 import { GameStateAdapter } from '../types/gameAdapter';
 
 interface GamePlayProps {
@@ -22,19 +23,6 @@ export function GamePlay({ adapter }: GamePlayProps) {
     }
   };
 
-  const getGameStatus = () => {
-    if (gameState.isSetup) return 'Set up your game';
-    if (gameState.winner) {
-      if (gameState.winner === 'draw') return "It's a draw!";
-      return `Winner: ${gameState.winner}`;
-    }
-    if (gameState.isAITurn || gameState.currentPlayer.type === 'computer') {
-      return 'AI is thinking...';
-    }
-    const playerLabel = adapter.getCurrentPlayerLabel();
-    const playerType = gameState.currentPlayer.type === 'human' ? 'Human' : 'Computer';
-    return `${playerLabel} (${playerType})'s turn`;
-  };
 
   const availableSymbols = adapter.getAvailableSymbols();
   const showSymbolSelector = adapter.requiresSymbolSelection() && 
@@ -50,7 +38,7 @@ export function GamePlay({ adapter }: GamePlayProps) {
 
   return (
     <div className="game-area">
-      <div className="game-status">{getGameStatus()}</div>
+      <GameStatus adapter={adapter} />
       
       {showSymbolSelector && (
         <SymbolSelector
