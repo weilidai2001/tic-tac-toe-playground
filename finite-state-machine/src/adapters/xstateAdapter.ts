@@ -25,9 +25,10 @@ export function useXStateAdapter(): GameStateAdapter {
   const state = fsm.getState();
   const board = fsm.getBoard();
   
-  const currentPlayer = state === 'X_TURN' || state === 'X_WIN' ? players.player1 : players.player2;
+  const currentPlayer = (state === 'X_TURN' || state === 'X_WIN' || (state === 'AI_THINKING' && fsm.isXTurn())) 
+    ? players.player1 : players.player2;
   const winner: SquareValue | 'draw' | null = state === 'X_WIN' ? 'X' : state === 'O_WIN' ? 'O' : state === 'DRAW' ? 'draw' : null;
-  const isAITurn = currentPlayer.type === 'computer' && (state === 'X_TURN' || state === 'O_TURN');
+  const isAITurn = state === 'AI_THINKING' || (currentPlayer.type === 'computer' && (state === 'X_TURN' || state === 'O_TURN'));
 
   useEffect(() => {
     const interval = setInterval(() => {
