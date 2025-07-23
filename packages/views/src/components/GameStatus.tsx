@@ -1,12 +1,11 @@
-import { GameStateAdapter } from '../types/gameAdapter';
+import { GameState } from '../types/gameAdapter';
+import { getModeConfig } from '../config/modeConfigs';
 
 interface GameStatusProps {
-  adapter: GameStateAdapter;
+  gameState: GameState;
 }
 
-export function GameStatus({ adapter }: GameStatusProps) {
-  const { gameState } = adapter;
-
+export function GameStatus({ gameState }: GameStatusProps) {
   const getGameStatus = () => {
     if (gameState.isSetup) return 'Set up your game';
     if (gameState.winner) {
@@ -16,7 +15,8 @@ export function GameStatus({ adapter }: GameStatusProps) {
     if (gameState.isAITurn || gameState.currentPlayer.type === 'computer') {
       return 'AI is thinking...';
     }
-    const playerLabel = adapter.getCurrentPlayerLabel();
+    const config = getModeConfig(gameState.mode);
+    const playerLabel = config.getPlayerLabel(gameState.currentPlayer.id);
     const playerType = gameState.currentPlayer.type === 'human' ? 'Human' : 'Computer';
     return `${playerLabel} (${playerType})'s turn`;
   };

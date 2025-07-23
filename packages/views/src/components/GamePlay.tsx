@@ -18,7 +18,7 @@ export function GamePlay({ adapter }: GamePlayProps) {
 
   return (
     <div className="game-area">
-      <GameStatus adapter={adapter} />
+      <GameStatus gameState={gameState} />
       
       {hasError && (
         <div className="error-message">
