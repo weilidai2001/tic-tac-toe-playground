@@ -1,7 +1,6 @@
 import { Board } from './Board';
 import { GameSetup } from './GameSetup';
 import { SymbolSelector } from './SymbolSelector';
-import { createGameStrategy } from '../strategies';
 import { GameStateAdapter } from '../types/gameAdapter';
 
 interface AppProps {
@@ -12,7 +11,7 @@ export function App({ adapter }: AppProps) {
   const { gameState, actions, selectedSymbol, setSelectedSymbol } = adapter;
 
   const handleSquareClick = (index: number) => {
-    if (gameState.mode === 'wild' && gameState.currentPlayer.type === 'human') {
+    if (adapter.requiresSymbolSelection() && gameState.currentPlayer.type === 'human') {
       if (!selectedSymbol) {
         alert('Please select a symbol first!');
         return;
@@ -33,19 +32,13 @@ export function App({ adapter }: AppProps) {
     if (gameState.isAITurn || gameState.currentPlayer.type === 'computer') {
       return 'AI is thinking...';
     }
-    const playerName = gameState.currentPlayer.id === 'player1' ? 'Player 1' : 'Player 2';
+    const playerLabel = adapter.getCurrentPlayerLabel();
     const playerType = gameState.currentPlayer.type === 'human' ? 'Human' : 'Computer';
-    return `${playerName} (${playerType})'s turn`;
+    return `${playerLabel} (${playerType})'s turn`;
   };
 
-  const getAvailableSymbols = () => {
-    if (gameState.mode === 'standard') return [];
-    const strategy = createGameStrategy(gameState.mode);
-    return strategy.getAvailableSymbols(gameState.currentPlayer, gameState.mode);
-  };
-
-  const availableSymbols = getAvailableSymbols();
-  const showSymbolSelector = gameState.mode === 'wild' && 
+  const availableSymbols = adapter.getAvailableSymbols();
+  const showSymbolSelector = adapter.requiresSymbolSelection() && 
     !gameState.isSetup && 
     gameState.currentPlayer.type === 'human' && 
     !gameState.winner &&
@@ -61,14 +54,14 @@ export function App({ adapter }: AppProps) {
       <header>
         <h1>Tic-Tac-Toe</h1>
         <div className="game-mode-indicator">
-          Mode: {gameState.mode === 'standard' ? 'Standard' : 'Wild'}
+          Mode: {adapter.getModeConfig().displayName}
         </div>
       </header>
 
       <main>
         {gameState.isSetup && (
           <GameSetup
-            mode={gameState.mode}
+            modeConfig={adapter.getModeConfig()}
             player1Type={gameState.players.player1.type}
             player2Type={gameState.players.player2.type}
             onModeChange={actions.onModeChange}

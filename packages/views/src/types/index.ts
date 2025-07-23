@@ -10,6 +10,13 @@ export interface Player {
   symbol?: SquareValue; // Only used in standard mode
 }
 
+export interface ModeConfig {
+  id: GameMode;
+  displayName: string;
+  description: string;
+  getPlayerLabel: (playerId: 'player1' | 'player2') => string;
+}
+
 export interface GameStrategy {
   isMoveValid(board: SquareValue[], index: number): boolean;
   checkWinner(board: SquareValue[]): SquareValue | null;

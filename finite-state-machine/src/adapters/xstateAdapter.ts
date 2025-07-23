@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { gameMachine } from '../machines/gameMachine';
-import { GameStateAdapter, SquareValue, GameMode, PlayerType } from '@tic-tac-toe/views';
+import { GameStateAdapter, SquareValue, GameMode, PlayerType, getModeConfig, createGameStrategy } from '@tic-tac-toe/views';
 
 export function useXStateAdapter(): GameStateAdapter {
   const [state, send] = useMachine(gameMachine);
@@ -47,6 +47,28 @@ export function useXStateAdapter(): GameStateAdapter {
     gameState,
     actions,
     selectedSymbol,
-    setSelectedSymbol
+    setSelectedSymbol,
+    
+    // Capability methods
+    requiresSymbolSelection: () => {
+      return context.mode === 'wild' && 
+             context.currentPlayer.type === 'human' && 
+             !isSetup && 
+             !context.winner &&
+             !isAITurn;
+    },
+    
+    getModeConfig: () => getModeConfig(context.mode),
+    
+    getAvailableSymbols: () => {
+      if (context.mode === 'standard') return [];
+      const strategy = createGameStrategy(context.mode);
+      return strategy.getAvailableSymbols(context.currentPlayer, context.mode);
+    },
+    
+    getCurrentPlayerLabel: () => {
+      const config = getModeConfig(context.mode);
+      return config.getPlayerLabel(context.currentPlayer.id);
+    }
   };
 }

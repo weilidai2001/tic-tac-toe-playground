@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, makeAIMove } from '../store/gameSlice';
-import { GameStateAdapter, SquareValue, GameMode, PlayerType } from '@tic-tac-toe/views';
+import { GameStateAdapter, SquareValue, GameMode, PlayerType, getModeConfig, createGameStrategy } from '@tic-tac-toe/views';
 
 export function useReduxAdapter(): GameStateAdapter {
   const dispatch = useAppDispatch();
@@ -41,6 +41,28 @@ export function useReduxAdapter(): GameStateAdapter {
     gameState,
     actions,
     selectedSymbol,
-    setSelectedSymbol
+    setSelectedSymbol,
+    
+    // Capability methods
+    requiresSymbolSelection: () => {
+      return gameState.mode === 'wild' && 
+             gameState.currentPlayer.type === 'human' && 
+             !gameState.isSetup && 
+             !gameState.winner &&
+             !gameState.isAITurn;
+    },
+    
+    getModeConfig: () => getModeConfig(gameState.mode),
+    
+    getAvailableSymbols: () => {
+      if (gameState.mode === 'standard') return [];
+      const strategy = createGameStrategy(gameState.mode);
+      return strategy.getAvailableSymbols(gameState.currentPlayer, gameState.mode);
+    },
+    
+    getCurrentPlayerLabel: () => {
+      const config = getModeConfig(gameState.mode);
+      return config.getPlayerLabel(gameState.currentPlayer.id);
+    }
   };
 }

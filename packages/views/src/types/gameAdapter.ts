@@ -1,4 +1,4 @@
-import { GameMode, PlayerType, SquareValue } from './index';
+import { GameMode, PlayerType, SquareValue, ModeConfig } from './index';
 
 export interface GameState {
   board: SquareValue[];
@@ -31,4 +31,10 @@ export interface GameStateAdapter {
   actions: GameActions;
   selectedSymbol: SquareValue | null;
   setSelectedSymbol: (symbol: SquareValue | null) => void;
+  
+  // Capability methods
+  requiresSymbolSelection(): boolean;
+  getModeConfig(): ModeConfig;
+  getAvailableSymbols(): SquareValue[];
+  getCurrentPlayerLabel(): string;
 }

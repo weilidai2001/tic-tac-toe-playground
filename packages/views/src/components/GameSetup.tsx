@@ -1,7 +1,8 @@
-import { GameMode, PlayerType } from '../types';
+import { GameMode, PlayerType, ModeConfig } from '../types';
+import { modeConfigs } from '../config/modeConfigs';
 
 interface GameSetupProps {
-  mode: GameMode;
+  modeConfig: ModeConfig;
   player1Type: PlayerType;
   player2Type: PlayerType;
   onModeChange: (mode: GameMode) => void;
@@ -10,7 +11,7 @@ interface GameSetupProps {
 }
 
 export function GameSetup({
-  mode,
+  modeConfig,
   player1Type,
   player2Type,
   onModeChange,
@@ -24,24 +25,17 @@ export function GameSetup({
       <div className="setup-section">
         <h3>Game Mode</h3>
         <div className="mode-selector">
-          <label>
-            <input
-              type="radio"
-              value="standard"
-              checked={mode === 'standard'}
-              onChange={(e) => onModeChange(e.target.value as GameMode)}
-            />
-            Standard (X vs O)
-          </label>
-          <label>
-            <input
-              type="radio"
-              value="wild"
-              checked={mode === 'wild'}
-              onChange={(e) => onModeChange(e.target.value as GameMode)}
-            />
-            Wild (Choose X or O each turn)
-          </label>
+          {Object.values(modeConfigs).map((config) => (
+            <label key={config.id}>
+              <input
+                type="radio"
+                value={config.id}
+                checked={modeConfig.id === config.id}
+                onChange={(e) => onModeChange(e.target.value as GameMode)}
+              />
+              {config.displayName} ({config.description})
+            </label>
+          ))}
         </div>
       </div>
 
@@ -49,7 +43,7 @@ export function GameSetup({
         <h3>Players</h3>
         <div className="player-setup">
           <div className="player-config">
-            <h4>Player 1 {mode === 'standard' ? '(X)' : ''}</h4>
+            <h4>{modeConfig.getPlayerLabel('player1')}</h4>
             <label>
               <input
                 type="radio"
@@ -71,7 +65,7 @@ export function GameSetup({
           </div>
 
           <div className="player-config">
-            <h4>Player 2 {mode === 'standard' ? '(O)' : ''}</h4>
+            <h4>{modeConfig.getPlayerLabel('player2')}</h4>
             <label>
               <input
                 type="radio"

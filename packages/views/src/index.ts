@@ -6,6 +6,8 @@ export { SymbolSelector } from './components/SymbolSelector';
 
 export { createGameStrategy, StandardStrategy, WildStrategy } from './strategies';
 
+export { modeConfigs, getModeConfig } from './config/modeConfigs';
+
 export {
   calculateWinner,
   isBoardFull,
@@ -21,7 +23,8 @@ export type {
   GameMode,
   PlayerType,
   Player,
-  GameStrategy
+  GameStrategy,
+  ModeConfig
 } from './types';
 
 export type { GameStateAdapter } from './types/gameAdapter';
