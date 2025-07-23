@@ -1,3 +1,4 @@
+export { App } from './components/App';
 export { Board } from './components/Board';
 export { GameSetup } from './components/GameSetup';
 export { Square } from './components/Square';
@@ -21,3 +22,5 @@ export type {
   Player,
   GameStrategy
 } from './types';
+
+export type { GameStateAdapter } from './types/gameAdapter';
