@@ -12,6 +12,7 @@ export {
   getEmptySquares,
   findWinningMove,
   findBlockingMove,
+  getAIMove,
   WINNING_LINES
 } from './utils/gameLogic';
 

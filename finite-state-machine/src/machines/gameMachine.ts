@@ -1,6 +1,6 @@
 import { createMachine, assign } from 'xstate';
 import { GameState, GameEvent, SquareValue } from '../types';
-import { createGameStrategy, isBoardFull, findWinningMove, findBlockingMove, getEmptySquares } from '@tic-tac-toe/views';
+import { createGameStrategy, isBoardFull, getAIMove } from '@tic-tac-toe/views';
 
 const initialContext: GameState = {
   board: Array(9).fill(null),
@@ -18,41 +18,21 @@ const initialContext: GameState = {
 };
 
 function makeAIMove(context: GameState): { index: number; symbol: SquareValue } {
-  const strategy = createGameStrategy(context.mode);
-  const board = context.board;
   const currentPlayer = context.currentPlayer;
+  const aiSymbol = currentPlayer.symbol;
   
-  // Get available symbols for current player
-  const availableSymbols = strategy.getAvailableSymbols(currentPlayer, context.mode);
+  const move = getAIMove(context.board, context.mode, aiSymbol);
   
-  // For each available symbol, try to find a winning move
-  for (const symbol of availableSymbols) {
-    const winningMove = findWinningMove(board, symbol);
-    if (winningMove !== null) {
-      return { index: winningMove, symbol };
-    }
+  // For wild mode, ensure we return a symbol
+  if (context.mode === 'wild' && !move.symbol) {
+    const symbols: SquareValue[] = ['X', 'O'];
+    move.symbol = symbols[Math.floor(Math.random() * symbols.length)];
   }
   
-  // Try to block opponent's winning moves
-  const opponentSymbols: SquareValue[] = context.mode === 'wild' ? ['X', 'O'] : 
-    [context.players.player1.symbol === currentPlayer.symbol ? 
-     context.players.player2.symbol! : context.players.player1.symbol!];
-  
-  for (const opponentSymbol of opponentSymbols) {
-    const blockingMove = findBlockingMove(board, opponentSymbol);
-    if (blockingMove !== null) {
-      // Use a random available symbol
-      const symbol = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
-      return { index: blockingMove, symbol };
-    }
-  }
-  
-  // Make a random move
-  const emptySquares = getEmptySquares(board);
-  const randomIndex = emptySquares[Math.floor(Math.random() * emptySquares.length)];
-  const randomSymbol = availableSymbols[Math.floor(Math.random() * availableSymbols.length)];
-  
-  return { index: randomIndex, symbol: randomSymbol };
+  return {
+    index: move.index,
+    symbol: move.symbol || aiSymbol || 'O'
+  };
 }
 
 export const gameMachine = createMachine<GameState, GameEvent>({
