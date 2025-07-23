@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setMode, setPlayerType, startGame, makeMove, resetGame, resetToSetup, makeAIMove } from '../store/gameSlice';
-import { Board } from './Board';
-import { GameSetup } from './GameSetup';
-import { SymbolSelector } from './SymbolSelector';
-import { SquareValue } from '../types';
-import { createGameStrategy } from '../strategies';
+import { Board, GameSetup, SymbolSelector, SquareValue, createGameStrategy } from '@tic-tac-toe/views';
 
 export function App() {
   const dispatch = useAppDispatch();

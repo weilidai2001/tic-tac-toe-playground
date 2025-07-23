@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { GameState, GameMode, PlayerType, SquareValue } from '../types';
-import { isBoardFull } from '../utils/gameLogic';
-import { createGameStrategy } from '../strategies';
+import { isBoardFull, createGameStrategy } from '@tic-tac-toe/views';
 import { getAIMove } from '../utils/aiPlayer';
 
 const initialState: GameState = {

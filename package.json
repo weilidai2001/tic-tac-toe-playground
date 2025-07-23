@@ -1,0 +1,22 @@
+{
+  "name": "tic-tac-toe-playground",
+  "version": "1.0.0",
+  "description": "A tic-tac-toe playground with multiple architectural approaches",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "finite-state-machine",
+    "global-state-strategy"
+  ],
+  "scripts": {
+    "build": "npm run build:views && npm run build --workspace=finite-state-machine && npm run build --workspace=global-state-strategy",
+    "build:views": "npm run build --workspace=@tic-tac-toe/views",
+    "typecheck": "npm run typecheck --workspaces",
+    "clean": "rm -rf packages/*/dist finite-state-machine/dist global-state-strategy/dist node_modules/.cache",
+    "dev:fsm": "npm run dev --workspace=finite-state-machine",
+    "dev:global": "npm run dev --workspace=global-state-strategy"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}

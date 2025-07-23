@@ -1,5 +1,5 @@
 import { SquareValue, GameMode } from '../types';
-import { findWinningMove, findBlockingMove, getEmptySquares } from './gameLogic';
+import { findWinningMove, findBlockingMove, getEmptySquares } from '@tic-tac-toe/views';
 
 export function getAIMove(board: SquareValue[], mode: GameMode): { index: number; symbol?: SquareValue } {
   const emptySquares = getEmptySquares(board);

@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useMachine } from '@xstate/react';
 import { gameMachine } from '../machines/gameMachine';
-import { Board } from './Board';
-import { GameSetup } from './GameSetup';
-import { SymbolSelector } from './SymbolSelector';
-import { SquareValue } from '../types';
-import { createGameStrategy } from '../strategies';
+import { Board, GameSetup, SymbolSelector, SquareValue, createGameStrategy } from '@tic-tac-toe/views';
 
 export function App() {
   const [state, send] = useMachine(gameMachine);

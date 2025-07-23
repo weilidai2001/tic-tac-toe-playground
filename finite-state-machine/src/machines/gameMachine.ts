@@ -1,7 +1,6 @@
 import { createMachine, assign } from 'xstate';
-import { GameState, GameEvent, SquareValue, GameMode, PlayerType } from '../types';
-import { createGameStrategy } from '../strategies';
-import { isBoardFull, findWinningMove, findBlockingMove, getEmptySquares } from '../utils/gameLogic';
+import { GameState, GameEvent, SquareValue } from '../types';
+import { createGameStrategy, isBoardFull, findWinningMove, findBlockingMove, getEmptySquares } from '@tic-tac-toe/views';
 
 const initialContext: GameState = {
   board: Array(9).fill(null),

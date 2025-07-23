@@ -1,14 +1,6 @@
-export type SquareValue = 'X' | 'O' | null;
+import { SquareValue, GameMode, Player } from '@tic-tac-toe/views';
 
-export type GameMode = 'standard' | 'wild';
-
-export type PlayerType = 'human' | 'computer';
-
-export interface Player {
-  id: 'player1' | 'player2';
-  type: PlayerType;
-  symbol?: SquareValue; // Only used in standard mode
-}
+export type { SquareValue, GameMode, PlayerType, Player, GameStrategy } from '@tic-tac-toe/views';
 
 export interface GameState {
   board: SquareValue[];
@@ -20,10 +12,4 @@ export interface GameState {
     player2: Player;
   };
   isSetup: boolean;
-}
-
-export interface GameStrategy {
-  isMoveValid(board: SquareValue[], index: number): boolean;
-  checkWinner(board: SquareValue[]): SquareValue | null;
-  getAvailableSymbols(player: Player, mode: GameMode): SquareValue[];
 }
