@@ -1,0 +1,25 @@
+{
+  "name": "tic-tac-toe-fsm",
+  "version": "1.0.0",
+  "description": "Tic-tac-toe game using Finite State Machine architecture",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xstate": "^4.38.3",
+    "@xstate/react": "^3.2.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.1",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
+  }
+}
