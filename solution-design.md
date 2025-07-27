@@ -192,3 +192,7 @@ Choose symbol and a move using minimax algorithm. Max computation is 2 \* 8! = 1
 ### Implementation Details
 
 The AI implementation will use Approach 3 for quick decisions and fall back to Approach 4 (minimax) for more complex board states. The minimax approach is feasible given the computational limits calculated above.
+
+# Use of AI
+
+I used ChatGPT to rephrase my draft copy of this document and generate the ASCII diagram.
