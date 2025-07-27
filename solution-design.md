@@ -1,5 +1,15 @@
 # Technical Design Document: Tic Tac Toe Game Engine
 
+## Executive Summary
+
+This document presents the technical design for a client-side tic-tac-toe web application supporting both Standard and Wild game variants. The solution employs a Finite State Machine architecture within a GameEngine module to ensure clean separation of concerns and maintainable code. Key design decisions include using React with TypeScript, implementing a strategic AI with minimax algorithm, and maintaining UI-agnostic game logic for maximum flexibility.
+
+**Estimated Implementation Time**: 10 hours
+
+**Primary Architecture**: Finite State Machine with GameEngine encapsulation
+
+**Technology Stack**: React, TypeScript, Jest for testing
+
 ## Background & Requirements
 
 ### Project Overview
@@ -17,7 +27,7 @@ This document outlines the technical design for a client-side web application im
 - Support for both human and AI players
 - Support for both single player and two player modes
 - 3x3 game board
-- Basic AI competence with ability to recognize and play winning moves
+- Basic AI competence with ability to recognise and play winning moves
 
 ### Technical Constraints
 
@@ -102,10 +112,10 @@ To be honest, both approaches are pretty similar, as they all lead to actions an
 │  └─────────────────────────────────────────────────────────┘    │
 │                                                                 │
 │  ┌─────────────────────┐  ┌──────────────────────────────┐      │
-│  │   Game Configuration │  │      Game State             │      │
-│  │  • mode: GameMode    │  │  • board: Cell[][]          │      │
-│  │  • player1Type       │  │  • currentPlayer: Player    │      │
-│  │  • player2Type       │  │  • previousPlayer: Player   │      │
+│  │   Game Configuration│  │      Game State              │      │
+│  │  • mode: GameMode   │  │  • board: Cell[][]           │      │
+│  │  • player1Type      │  │  • currentPlayer: Player     │      │
+│  │  • player2Type      │  │  • previousPlayer: Player    │      │
 │  └─────────────────────┘  │  • status: GameStatus        │      │
 │                           │  • moveHistory: Move[]       │      │
 │                           └──────────────────────────────┘      │
@@ -193,6 +203,193 @@ Choose symbol and a move using minimax algorithm. Max computation is 2 \* 8! = 1
 
 The AI implementation will use Approach 3 for quick decisions and fall back to Approach 4 (minimax) for more complex board states. The minimax approach is feasible given the computational limits calculated above.
 
-# Use of AI
+## Testing Strategy
 
-I used ChatGPT to rephrase my draft copy of this document and generate the ASCII diagram.
+### Testing Approach
+
+The testing strategy will focus on ensuring reliability, correctness, and maintainability across all critical components of the tic-tac-toe application.
+
+### Test Categories
+
+#### 1. Unit Tests
+**Target Coverage**: 95%+ for core game logic
+
+**Critical Areas**:
+- **Game Rules Logic**: Win condition detection, move validation, game state transitions
+- **AI Strategy Functions**: Move evaluation, minimax algorithm, symbol selection in wild mode
+- **GameEngine Interface**: Action processing, state queries, error handling
+- **Finite State Machine**: State transitions, guard conditions, action execution
+
+**Testing Framework**: Jest with TypeScript support
+
+**Example Test Cases**:
+```typescript
+describe('GameEngine', () => {
+  it('should detect horizontal wins correctly', () => {
+    // Test all horizontal win combinations
+  });
+  
+  it('should prevent invalid moves', () => {
+    // Test occupied cells, out-of-bounds moves
+  });
+  
+  it('should handle wild mode symbol selection', () => {
+    // Test AI symbol choice logic
+  });
+});
+```
+
+#### 2. Integration Tests
+**Focus**: Component interaction and data flow
+
+**Key Scenarios**:
+- Complete game flows (human vs human, human vs AI)
+- Mode switching (standard ↔ wild)
+- Error propagation and recovery
+- AI decision-making in different board states
+
+#### 3. End-to-End Tests
+**Framework**: Cypress or Playwright
+
+**User Journey Coverage**:
+- Complete game sessions in both modes
+- AI behavior validation
+- UI responsiveness and accessibility
+- Game reset and restart functionality
+
+### Test Data Management
+
+**Board State Fixtures**: Pre-defined board configurations for consistent testing
+- Near-win scenarios
+- Complex wild mode situations
+- Edge cases (full board, immediate wins)
+
+**AI Test Scenarios**: Standardised positions to validate AI decision-making
+- Obvious winning moves
+- Blocking opponent wins
+- Strategic positioning in wild mode
+
+### Performance Testing
+
+**Benchmarks**:
+- AI move calculation time: < 100ms for standard mode, < 200ms for wild mode
+- Game state updates: < 16ms (60 FPS compliance)
+- Memory usage: Monitor for leaks during extended play
+
+### Testing Priority Matrix
+
+| Component | Unit Tests | Integration | E2E | Priority |
+|-----------|------------|-------------|-----|----------|
+| Game Logic | ✓ | ✓ | ✓ | Critical |
+| AI Strategy | ✓ | ✓ | ✓ | Critical |
+| GameEngine | ✓ | ✓ | ✓ | Critical |
+| UI Components | ✓ | ✓ | ✓ | High |
+| State Management | ✓ | ✓ | - | High |
+
+## Risks and Mitigation Strategies
+
+### Technical Risks
+
+#### 1. AI Performance in Wild Mode
+**Risk**: Complex symbol selection logic may cause unacceptable delays
+
+**Likelihood**: Medium | **Impact**: High
+
+**Mitigation**:
+- Implement time-bounded search with fallback to heuristic moves
+- Cache evaluated positions to avoid recalculation
+- Progressive enhancement: start with simple heuristics, optimise iteratively
+
+#### 2. State Management Complexity
+**Risk**: FSM implementation may become overly complex for simple game
+
+**Likelihood**: Low | **Impact**: Medium
+
+**Mitigation**:
+- Start with minimal state machine, expand only as needed
+- Fallback plan: Use simpler state management (Zustand) if FSM proves excessive
+- Clear documentation of state transitions
+
+#### 3. Cross-Browser Compatibility
+**Risk**: Modern JavaScript features may not work in older browsers
+
+**Likelihood**: Low | **Impact**: Low
+
+**Mitigation**:
+- Use TypeScript compilation targets for broader support
+- Test on major browsers during development
+- Polyfills for essential features if needed
+
+### Implementation Risks
+
+#### 1. Scope Creep
+**Risk**: Feature additions beyond requirements within 10-hour constraint
+
+**Likelihood**: Medium | **Impact**: High
+
+**Mitigation**:
+- Strict adherence to MVP requirements
+- Time-boxed implementation phases
+- Clear definition of "done" for each component
+
+#### 2. Over-Engineering
+**Risk**: Complex architecture may exceed time budget
+
+**Likelihood**: Medium | **Impact**: High
+
+**Mitigation**:
+- Iterative implementation: start simple, refactor as needed
+- Regular time tracking and scope adjustment
+- Focus on working software over perfect architecture
+
+### Quality Risks
+
+#### 1. Insufficient Testing Coverage
+**Risk**: Critical bugs in game logic or AI behavior
+
+**Likelihood**: Medium | **Impact**: High
+
+**Mitigation**:
+- Test-driven development for critical components
+- Automated test runs in development workflow
+- Manual testing checklist for game scenarios
+
+#### 2. Poor User Experience
+**Risk**: Confusing interface or slow AI response
+
+**Likelihood**: Low | **Impact**: Medium
+
+**Mitigation**:
+- Simple, intuitive UI design
+- Loading indicators for AI moves
+- Clear game state communication
+
+## Use of AI
+
+### LLM Usage Disclosure
+
+**Tools Used**: ChatGPT-4 and Claude for various aspects of this technical design document.
+
+**Specific Use Cases**:
+
+1. **Document Structure and Writing Quality**
+   - Used ChatGPT to rephrase draft sections for clarity and professional tone
+   - Generated the ASCII architectural diagram for GameEngine structure
+   - Improved technical vocabulary and document flow
+
+2. **Research and Analysis**
+   - Used Claude to explore architectural patterns and their trade-offs
+   - Generated comparative analysis of different state management approaches
+   - Researched best practices for AI implementation in turn-based games
+
+3. **Technical Content Generation**
+   - AI-assisted creation of testing strategy framework
+   - Risk assessment methodology and mitigation strategies
+   - Performance benchmarking criteria
+
+**Prompts Used** (examples):
+- "Compare finite state machines vs Redux for turn-based game state management"
+- "Generate a comprehensive testing strategy for a React TypeScript tic-tac-toe game"
+- "Create a risk assessment matrix for a 10-hour game development project"
+
+**Human Oversight**: All AI-generated content was reviewed, validated, and customised to fit the specific requirements of this tic-tac-toe implementation. Technical decisions and architectural choices represent my own engineering judgment informed by AI research.
